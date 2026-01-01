@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}All Calls - AI Call Auditor{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 class="page-title">All Call Records</h1>
+        <p class="page-subtitle" id="callCount">Loading calls...</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+        <a href="/upload" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Upload New Call
+        </a>
+        <a href="/" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i>
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="info-card" style="margin-bottom: 1.5rem;">
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+        <div>
+            <label style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">Search</label>
+            <input type="text" id="searchInput" placeholder="Search by agent, customer..." 
+                   style="padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); width: 200px;">
+        </div>
+        <div>
+            <label style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">Sentiment</label>
+            <select id="sentimentFilter" style="padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary);">
+                <option value="">All</option>
+                <option value="Positive">Positive</option>
+                <option value="Negative">Negative</option>
+                <option value="Neutral">Neutral</option>
+                <option value="Mixed">Mixed</option>
+            </select>
+        </div>
+        <div>
+            <label style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">Sort By</label>
+            <select id="sortBy" style="padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary);">
+                <option value="date_desc">Newest First</option>
+                <option value="date_asc">Oldest First</option>
+                <option value="score_desc">Highest Score</option>
+                <option value="score_asc">Lowest Score</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Calls Table -->
+<div class="info-card">
+    <div class="table-responsive">
+        <table class="data-table" id="callsTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Agent</th>
+                    <th>Customer</th>
+                    <th>Duration</th>
+                    <th>Score</th>
+                    <th>Sentiment</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="callsTableBody">
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 3rem;">
+                        <div class="spinner" style="margin: 0 auto 1rem;"></div>
+                        <div>Loading calls...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.table-responsive {
+    overflow-x: auto;
+}
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.data-table th,
+.data-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+.data-table th {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.data-table tbody tr {
+    transition: background 0.2s;
+}
+.data-table tbody tr:hover {
+    background: var(--bg-secondary);
+}
+.score-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+.score-high { background: rgba(16, 185, 129, 0.2); color: #10B981; }
+.score-medium { background: rgba(245, 158, 11, 0.2); color: #F59E0B; }
+.score-low { background: rgba(239, 68, 68, 0.2); color: #EF4444; }
+.sentiment-positive { color: #10B981; }
+.sentiment-negative { color: #EF4444; }
+.sentiment-neutral { color: #6B7280; }
+.sentiment-mixed { color: #F59E0B; }
+.btn-view {
+    padding: 0.5rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+.btn-view:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+.btn-delete-small {
+    padding: 0.5rem;
+    background: transparent;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 6px;
+    color: #EF4444;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-delete-small:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let allCalls = [];
+
+async function loadCalls() {
+    try {
+        const response = await fetch('/api/calls/');
+        if (!response.ok) throw new Error('Failed to load calls');
+        
+        allCalls = await response.json();
+        document.getElementById('callCount').textContent = `${allCalls.length} total calls`;
+        renderCalls(allCalls);
+        
+    } catch (error) {
+        document.getElementById('callsTableBody').innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                    <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                    Failed to load calls. Please try again.
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function renderCalls(calls) {
+    if (calls.length === 0) {
+        document.getElementById('callsTableBody').innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                    <i class="fas fa-phone-slash" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                    No calls found. <a href="/upload" style="color: var(--accent);">Upload your first call</a>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    const html = calls.map(call => {
+        const scoreClass = call.overall_score >= 80 ? 'score-high' : call.overall_score >= 60 ? 'score-medium' : 'score-low';
+        const sentimentClass = `sentiment-${(call.sentiment || 'neutral').toLowerCase()}`;
+        const date = call.call_date ? new Date(call.call_date).toLocaleDateString() : 'N/A';
+        const time = call.call_date ? new Date(call.call_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+        const duration = call.duration ? `${Math.round(call.duration)}s` : 'N/A';
+        
+        return `
+            <tr>
+                <td>
+                    <div style="font-weight: 500;">${date}</div>
+                    <div style="color: var(--text-muted); font-size: 0.75rem;">${time}</div>
+                </td>
+                <td>${call.agent_name || 'Unknown'}</td>
+                <td>${call.customer_name || 'Unknown'}</td>
+                <td>${duration}</td>
+                <td><span class="score-badge ${scoreClass}">${(call.overall_score || 0).toFixed(1)}%</span></td>
+                <td class="${sentimentClass}">
+                    <i class="fas fa-${call.sentiment === 'Positive' ? 'smile' : call.sentiment === 'Negative' ? 'frown' : 'meh'}"></i>
+                    ${call.sentiment || 'Unknown'}
+                </td>
+                <td>${call.resolution_status || 'Unknown'}</td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a href="/calls/${call.id}" class="btn-view">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <button class="btn-delete-small" onclick="deleteCall('${call.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    document.getElementById('callsTableBody').innerHTML = html;
+}
+
+function filterAndSort() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const sentiment = document.getElementById('sentimentFilter').value;
+    const sortBy = document.getElementById('sortBy').value;
+    
+    let filtered = allCalls.filter(call => {
+        const matchesSearch = !search || 
+            (call.agent_name || '').toLowerCase().includes(search) ||
+            (call.customer_name || '').toLowerCase().includes(search);
+        const matchesSentiment = !sentiment || call.sentiment === sentiment;
+        return matchesSearch && matchesSentiment;
+    });
+    
+    // Sort
+    filtered.sort((a, b) => {
+        switch(sortBy) {
+            case 'date_asc':
+                return new Date(a.call_date) - new Date(b.call_date);
+            case 'score_desc':
+                return (b.overall_score || 0) - (a.overall_score || 0);
+            case 'score_asc':
+                return (a.overall_score || 0) - (b.overall_score || 0);
+            default: // date_desc
+                return new Date(b.call_date) - new Date(a.call_date);
+        }
+    });
+    
+    renderCalls(filtered);
+}
+
+async function deleteCall(callId) {
+    if (!confirm('Are you sure you want to delete this call?')) return;
+    
+    try {
+        const response = await fetch(`/api/calls/${callId}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Failed to delete');
+        
+        allCalls = allCalls.filter(c => c.id !== callId);
+        document.getElementById('callCount').textContent = `${allCalls.length} total calls`;
+        filterAndSort();
+    } catch (error) {
+        alert('Failed to delete call: ' + error.message);
+    }
+}
+
+// Event listeners
+document.getElementById('searchInput').addEventListener('input', filterAndSort);
+document.getElementById('sentimentFilter').addEventListener('change', filterAndSort);
+document.getElementById('sortBy').addEventListener('change', filterAndSort);
+
+// Load on page load
+document.addEventListener('DOMContentLoaded', loadCalls);
+</script>
+{% endblock %}
+

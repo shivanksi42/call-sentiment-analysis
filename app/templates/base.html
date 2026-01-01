@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Call Auditor{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="/" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <div class="logo-text">Call<span>Auditor</span></div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/" class="{% if request.url.path == '/' %}active{% endif %}">Dashboard</a></li>
+                <li><a href="/upload" class="{% if request.url.path == '/upload' %}active{% endif %}">Upload Call</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+

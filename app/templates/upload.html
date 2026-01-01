@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Call - AI Call Auditor{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Upload Call Recording</h1>
+    <p class="page-subtitle">Upload an audio file to analyze call quality and customer sentiment</p>
+</div>
+
+<div class="detail-grid">
+    <div class="info-card fade-in">
+        <div class="info-header">
+            <h3 class="info-title">Call Recording</h3>
+        </div>
+        
+        <form id="uploadForm">
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <p class="upload-text">Drag & drop your audio file here</p>
+                <p class="upload-hint">or click to browse (MP3, WAV, M4A, WebM, OGG)</p>
+                <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,.webm,.ogg,audio/*" hidden>
+            </div>
+            
+            <div id="selectedFile" style="display: none; margin-top: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: 10px;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fas fa-file-audio" style="color: var(--accent-primary); font-size: 1.5rem;"></i>
+                    <div>
+                        <div id="fileName" style="font-weight: 500;"></div>
+                        <div id="fileSize" style="font-size: 0.875rem; color: var(--text-muted);"></div>
+                    </div>
+                    <button type="button" id="removeFile" style="margin-left: auto; background: none; border: none; color: var(--text-muted); cursor: pointer;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 2rem;">
+                <h4 style="margin-bottom: 1rem; color: var(--text-secondary);">Call Details (Optional)</h4>
+                
+                <div class="info-grid">
+                    <div class="form-group">
+                        <label class="form-label">Agent ID</label>
+                        <input type="text" class="form-input" name="agent_id" placeholder="e.g., AGT001">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Agent Name</label>
+                        <input type="text" class="form-input" name="agent_name" placeholder="e.g., John Smith">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Customer Name</label>
+                        <input type="text" class="form-input" name="customer_name" placeholder="e.g., Jane Doe">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Customer Phone</label>
+                        <input type="text" class="form-input" name="customer_phone" placeholder="e.g., +1234567890">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Call Type</label>
+                    <select class="form-input" name="call_type">
+                        <option value="Incoming">Incoming (Customer Initiated)</option>
+                        <option value="Outgoing">Outgoing (Agent Initiated)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem; justify-content: center;">
+                <i class="fas fa-magic"></i>
+                Analyze Call
+            </button>
+        </form>
+    </div>
+    
+    <div>
+        <div class="info-card fade-in" style="animation-delay: 0.1s; margin-bottom: 1.5rem;">
+            <div class="info-header">
+                <h3 class="info-title">What We Analyze</h3>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                    <div style="width: 32px; height: 32px; background: rgba(59, 130, 246, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-microphone" style="color: #3b82f6;"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500; margin-bottom: 0.25rem;">Transcription</div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">Speech-to-text using OpenAI Whisper</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                    <div style="width: 32px; height: 32px; background: rgba(16, 185, 129, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-smile" style="color: #10B981;"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500; margin-bottom: 0.25rem;">Sentiment Analysis</div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">Customer emotion & urgency detection</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                    <div style="width: 32px; height: 32px; background: rgba(245, 158, 11, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-star" style="color: #F59E0B;"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500; margin-bottom: 0.25rem;">Quality Scoring</div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">Questionnaire-based agent evaluation</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                    <div style="width: 32px; height: 32px; background: rgba(239, 68, 68, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-shield-alt" style="color: #EF4444;"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500; margin-bottom: 0.25rem;">Compliance Check</div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">Risk assessment & fraud detection</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-card fade-in" style="animation-delay: 0.2s;">
+            <div class="info-header">
+                <h3 class="info-title">Supported Formats</h3>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                <span class="badge mixed">MP3</span>
+                <span class="badge mixed">WAV</span>
+                <span class="badge mixed">M4A</span>
+                <span class="badge mixed">WebM</span>
+                <span class="badge mixed">OGG</span>
+            </div>
+            <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                Maximum file size: 25MB<br>
+                Recommended: Clear audio with minimal background noise
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay" style="display: none;">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Uploading file...</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const uploadForm = document.getElementById('uploadForm');
+const selectedFile = document.getElementById('selectedFile');
+const removeFileBtn = document.getElementById('removeFile');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const loadingText = document.getElementById('loadingText');
+
+let currentFile = null;
+
+// Drag and drop handlers
+uploadZone.addEventListener('click', () => fileInput.click());
+
+uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('dragover');
+});
+
+uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('dragover');
+});
+
+uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFile(files[0]);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+    }
+});
+
+function handleFile(file) {
+    currentFile = file;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatFileSize(file.size);
+    selectedFile.style.display = 'block';
+    uploadZone.style.display = 'none';
+}
+
+removeFileBtn.addEventListener('click', () => {
+    currentFile = null;
+    fileInput.value = '';
+    selectedFile.style.display = 'none';
+    uploadZone.style.display = 'block';
+});
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+uploadForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    if (!currentFile) {
+        alert('Please select an audio file first.');
+        return;
+    }
+    
+    loadingOverlay.style.display = 'flex';
+    loadingText.textContent = 'Uploading file...';
+    
+    const formData = new FormData();
+    formData.append('file', currentFile);
+    
+    // Add optional fields
+    const fields = ['agent_id', 'agent_name', 'customer_name', 'customer_phone', 'call_type'];
+    fields.forEach(field => {
+        const value = uploadForm.querySelector(`[name="${field}"]`).value;
+        if (value) {
+            formData.append(field, value);
+        }
+    });
+    
+    try {
+        loadingText.textContent = 'Transcribing audio with Whisper...';
+        
+        const response = await fetch('/api/calls/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Upload failed');
+        }
+        
+        loadingText.textContent = 'Analysis complete! Redirecting...';
+        
+        const result = await response.json();
+        window.location.href = `/calls/${result.call_id}`;
+        
+    } catch (error) {
+        loadingOverlay.style.display = 'none';
+        alert('Error: ' + error.message);
+    }
+});
+</script>
+{% endblock %}
+
