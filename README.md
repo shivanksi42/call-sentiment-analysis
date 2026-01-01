@@ -1,4 +1,4 @@
-# 🎧 AI-Powered Call Quality Auditor POC
+# 🎧 AI-Powered Call Quality Auditor
 
 An AI-driven solution for automated call quality auditing and customer sentiment analysis. This POC uses **OpenAI Whisper** for speech-to-text transcription and **GPT-3.5 Turbo** for sentiment analysis and quality scoring.
 
